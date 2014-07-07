@@ -3,4 +3,4 @@ parameters:
 services:
     acilia.rating:
         class: Acilia\Bundle\RatingBundle\Service\RatingService
-        arguments: [@doctrine, @core.memcache, %acilia.rating%, @event_dispatcher]
+        arguments: [@doctrine, @core.memcached, %acilia.rating%, @event_dispatcher]
