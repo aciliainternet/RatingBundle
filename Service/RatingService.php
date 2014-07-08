@@ -2,7 +2,7 @@
 namespace Acilia\Bundle\RatingBundle\Service;
 
 use Acilia\Bundle\RatingBundle\Event\RatedEvent;
-use Acilia\Component\Memcached\Service\MemcacheService;
+use Acilia\Component\Memcached\Service\MemcachedService;
 use Acilia\Bundle\RatingBundle\Entity\RatingResult;
 use Acilia\Bundle\RatingBundle\Entity\RatingVote;
 use Acilia\Bundle\RatingBundle\Library\Rating\VoterInterface;
@@ -30,7 +30,7 @@ class RatingService
 	 */
 	protected $eventDispatcher;
 
-	public function __construct($doctrine, MemcacheService $memcache, $options, EventDispatcherInterface $eventDispatcher)
+	public function __construct($doctrine, MemcachedService $memcache, $options, EventDispatcherInterface $eventDispatcher)
 	{
 		$this->eventDispatcher = $eventDispatcher;
         $this->doctrine = $doctrine;
