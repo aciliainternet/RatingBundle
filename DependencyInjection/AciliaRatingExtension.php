@@ -22,9 +22,8 @@ class AciliaRatingExtension extends Extension
         $configuration = new Configuration();
         $config = $this->processConfiguration($configuration, $configs);
 
-        // Set Fragment Cache Disabled by Default
         if (!$container->hasParameter('acilia.rating')) {
-            $container->setParameter('acilia.rating', array('min' => 1, 'max' => 5));
+            $container->setParameter('acilia.rating', ['min' => 1, 'max' => 5, 'strategy' => 'average']);
         }
 
         $loader = new Loader\YamlFileLoader($container, new FileLocator(__DIR__.'/../Resources/config'));

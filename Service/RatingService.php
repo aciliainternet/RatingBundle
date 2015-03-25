@@ -9,6 +9,7 @@ use Acilia\Bundle\RatingBundle\Library\Rating\VoterInterface;
 use Acilia\Bundle\RatingBundle\Library\Rating\VotableInterface;
 use Acilia\Bundle\RatingBundle\Library\Rating\AlreadyVotedException;
 use Acilia\Bundle\RatingBundle\Library\Rating\NotVotedException;
+use Acilia\Bundle\RatingBundle\Service\RatingStrategyService;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use DateTime;
 
@@ -23,6 +24,7 @@ class RatingService
 	protected $doctrine;
 	protected $memcache;
 	protected $options;
+    protected $strategy;
 
 	/**
 	 * Event Dipatcher
@@ -30,12 +32,13 @@ class RatingService
 	 */
 	protected $eventDispatcher;
 
-	public function __construct($doctrine, MemcachedService $memcache, $options, EventDispatcherInterface $eventDispatcher)
+	public function __construct($doctrine, MemcachedService $memcache, $options, EventDispatcherInterface $eventDispatcher, RatingStrategyService $strategy)
 	{
 		$this->eventDispatcher = $eventDispatcher;
         $this->doctrine = $doctrine;
         $this->memcache = $memcache;
         $this->options = $options;
+        $this->strategy = $strategy;
 
         if (!isset($this->options['min']) || !is_numeric($this->options['min'])) {
         	$this->options['min'] = 1;
@@ -128,10 +131,9 @@ class RatingService
 			// Get Result
 			$result = $this->getResult($votable);
 
-			// Calculate new Values
-			$newVotes = $result->getVotes() + 1;
-			$newValue = (($result->getValue() * $result->getVotes()) + $voteValue) / $newVotes;
-			$newValue = round($newValue, 2, PHP_ROUND_HALF_UP);
+			// Calculate new Votes and Values
+            $newVotes = $this->getStrategy()->votes($result);
+            $newValue = $this->getStrategy()->calculate($result, $voteValue);
 
 			// Set new Values
 			$result->setValue($newValue)->setVotes($newVotes);
@@ -322,4 +324,9 @@ class RatingService
 
 		return $value;
 	}
+
+    protected function getStrategy()
+    {
+        return $this->strategy->getStrategy($this->options['strategy']);
+    }
 }
