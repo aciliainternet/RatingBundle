@@ -132,8 +132,8 @@ class RatingService
 			$result = $this->getResult($votable);
 
 			// Calculate new Votes and Values
-            $this->getStrategy()->votes($result);
-            $this->getStrategy()->calculate($result, $voteValue);
+            $this->getStrategy()->calculate($result, $voteValue, $result->getVotes() + 1);
+            $this->getStrategy()->incVote($result);
 
 			// Create Vote
 			$vote = new RatingVote();
@@ -184,8 +184,8 @@ class RatingService
 			if ($vote instanceOf RatingVote) {
 
                 // Calculate updated Values
-                $updatedValue = $voteValue - $result->getValue();
-				$this->getStrategy()->calculate($result, $updatedValue);
+                $updatedValue = $voteValue - $vote->getValue();
+                $this->getStrategy()->calculate($result, $updatedValue, $result->getVotes());
 
 				// Set updated Values
 				$vote->setValue($voteValue);
@@ -227,14 +227,8 @@ class RatingService
 
 			if ($vote instanceOf RatingVote) {
 				// Calculate updated Values
-				if ($result->getVotes() == 1) {
-					$updatedValue = 0;
-					$updatedVotes = 0;
-				} else {
-					$updatedVotes = $result->getVotes() - 1;
-					$updatedValue = (($result->getValue() * $result->getVotes()) - $vote->getValue()) / $updatedVotes;
-					$updatedValue = round($updatedValue, 2, PHP_ROUND_HALF_UP);
-				}
+                $this->getStrategy()->calculate($result, -$vote->getValue(), $result->getVotes() - 1);
+                $this->getStrategy()->decVote($result);
 
 				// Update user vote on Memcache
 				$key = 'Rating::' . $result->getResource() . '::' . $voter->getId();
@@ -245,7 +239,6 @@ class RatingService
 				$this->memcache->delete($key);
 
 				// Set updated Values
-				$result->setValue($updatedValue)->setVotes($updatedVotes);
 				$em->remove($vote);
 				$em->flush();
 
