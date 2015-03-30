@@ -132,11 +132,8 @@ class RatingService
 			$result = $this->getResult($votable);
 
 			// Calculate new Votes and Values
-            $newVotes = $this->getStrategy()->votes($result);
-            $newValue = $this->getStrategy()->calculate($result, $voteValue);
-
-			// Set new Values
-			$result->setValue($newValue)->setVotes($newVotes);
+            $this->getStrategy()->votes($result);
+            $this->getStrategy()->calculate($result, $voteValue);
 
 			// Create Vote
 			$vote = new RatingVote();
@@ -185,17 +182,13 @@ class RatingService
 			$vote = $this->getVote($votable, $voter);
 
 			if ($vote instanceOf RatingVote) {
-				// Calculate updated Values
-				if ($result->getVotes() == 1) {
-					$updatedValue = $voteValue;
-				} else {
-					$updatedValue = (($result->getValue() * $result->getVotes()) - $vote->getValue() + $voteValue) / $result->getVotes();
-					$updatedValue = round($updatedValue, 2, PHP_ROUND_HALF_UP);
-				}
+
+                // Calculate updated Values
+                $updatedValue = $voteValue - $result->getValue();
+				$this->getStrategy()->calculate($result, $updatedValue);
 
 				// Set updated Values
 				$vote->setValue($voteValue);
-				$result->setValue($updatedValue);
 				$em->flush();
 
 				// Save user vote Value on Memcache

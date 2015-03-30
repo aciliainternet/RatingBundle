@@ -16,18 +16,18 @@ class AverageStrategy implements StrategyInterface
 
     public function votes(RatingResult $result)
     {
-        $votes = $result->getVotes() + 1;
+        $newVotes = $result->getVotes() + 1;
 
-        return $votes;
+        // Set new Votes
+        $result->setVotes($newVotes);
     }
 
     public function calculate(RatingResult $result, $voteValue)
     {
-        $newVotes = $this->votes($result);
-
-        $newValue = (($result->getValue() * $result->getVotes()) + $voteValue) / $newVotes;
+        $newValue = (($result->getValue() * $result->getVotes()) + $voteValue) / $result->getVotes();
         $newValue = round($newValue, 2, PHP_ROUND_HALF_UP);
 
-        return $newValue;
+        // Set new Values
+        $result->setValue($newValue);
     }
 }
