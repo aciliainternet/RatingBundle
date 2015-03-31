@@ -15,301 +15,296 @@ use DateTime;
 
 class RatingService
 {
-	/**
-	 * Event Triggered when the something is Rated
-	 * @var string
-	 */
-	const EVENT_RATED = 'votable.rated';
+    /**
+     * Event Triggered when the something is Rated
+     * @var string
+     */
+    const EVENT_RATED = 'votable.rated';
 
-	protected $doctrine;
-	protected $memcache;
-	protected $options;
+    protected $doctrine;
+    protected $memcache;
+    protected $options;
     protected $strategy;
 
-	/**
-	 * Event Dipatcher
-	 * @var \Symfony\Component\EventDispatcher\EventDispatcherInterface
-	 */
-	protected $eventDispatcher;
+    /**
+     * Event Dipatcher
+     * @var \Symfony\Component\EventDispatcher\EventDispatcherInterface
+     */
+    protected $eventDispatcher;
 
-	public function __construct($doctrine, MemcachedService $memcache, $options, EventDispatcherInterface $eventDispatcher, RatingStrategyService $strategy)
-	{
-		$this->eventDispatcher = $eventDispatcher;
+    public function __construct($doctrine, MemcachedService $memcache, $options, EventDispatcherInterface $eventDispatcher, RatingStrategyService $strategy)
+    {
+        $this->eventDispatcher = $eventDispatcher;
         $this->doctrine = $doctrine;
         $this->memcache = $memcache;
         $this->options = $options;
         $this->strategy = $strategy;
 
         if (!isset($this->options['min']) || !is_numeric($this->options['min'])) {
-        	$this->options['min'] = 1;
+            $this->options['min'] = 1;
         }
 
         if (!isset($this->options['max']) || !is_numeric($this->options['max'])) {
-        	$this->options['max'] = 5;
+            $this->options['max'] = 5;
         }
-	}
+    }
 
-	protected function validateVoteValue($value)
-	{
-		$value = (integer) $value;
+    protected function validateVoteValue($value)
+    {
+        $value = (integer) $value;
 
-		if ($value < $this->options['min']) {
-			$value = $this->options['min'];
+        if ($value < $this->options['min']) {
+            $value = $this->options['min'];
+        } elseif ($value > $this->options['max']) {
+            $value = $this->options['max'];
+        }
 
-		} else if ($value > $this->options['max']) {
-			$value = $this->options['max'];
-		}
+        return $value;
+    }
 
-		return $value;
-	}
+    protected function getResult(VotableInterface $votable, $create = true)
+    {
+        $em = $this->doctrine->getManager();
+        $resource = RatingResult::calculateResource($votable);
 
-	protected function getResult(VotableInterface $votable, $create = true)
-	{
-		$em = $this->doctrine->getManager();
-		$resource = RatingResult::calculateResource($votable);
-
-		$result = $em->getRepository('AciliaRatingBundle:RatingResult')->findOneByResource($resource);
-		if (!$result && $create == true) {
-			$result = new RatingResult();
-			$result->setResource($resource)
+        $result = $em->getRepository('AciliaRatingBundle:RatingResult')->findOneByResource($resource);
+        if (!$result && $create == true) {
+            $result = new RatingResult();
+            $result->setResource($resource)
                    ->setResourceType($votable->getResourceType())
                    ->setResourceId($votable->getResourceId())
                    ->setValue(0)
                    ->setVotes(0);
-			$em->persist($result);
-		}
+            $em->persist($result);
+        }
 
-		return $result;
-	}
+        return $result;
+    }
 
-	protected function getVote(VotableInterface $votable, VoterInterface $voter)
-	{
-		$em = $this->doctrine->getManager();
-		$resource = RatingResult::calculateResource($votable);
+    protected function getVote(VotableInterface $votable, VoterInterface $voter)
+    {
+        $em = $this->doctrine->getManager();
+        $resource = RatingResult::calculateResource($votable);
 
-		$vote = $em->getRepository('AciliaRatingBundle:RatingVote')->findOneBy([
-			'voter' => $voter->getId(),
-			'resource' => $resource,
-		]);
+        $vote = $em->getRepository('AciliaRatingBundle:RatingVote')->findOneBy([
+            'voter' => $voter->getId(),
+            'resource' => $resource,
+        ]);
 
-		return $vote;
-	}
+        return $vote;
+    }
 
-	protected function checkIfVoterAlreadyVoted(VotableInterface $votable, VoterInterface $voter)
-	{
-		$alreadyVoted = false;
-		$resource = RatingResult::calculateResource($votable);
+    protected function checkIfVoterAlreadyVoted(VotableInterface $votable, VoterInterface $voter)
+    {
+        $alreadyVoted = false;
+        $resource = RatingResult::calculateResource($votable);
 
-		$key = 'Rating::' . $resource . '::' . $voter->getId();
-		$alreadyVoted = $this->memcache->get($key);
+        $key = 'Rating::' . $resource . '::' . $voter->getId();
+        $alreadyVoted = $this->memcache->get($key);
 
-		if ($this->memcache->notFound()) {
-			$em = $this->doctrine->getManager();
-			$vote = $em->getRepository('AciliaRatingBundle:RatingVote')->findOneBy([
-		    	'voter' => $voter->getId(),
-				'resource' => $resource,
-			]);
+        if ($this->memcache->notFound()) {
+            $em = $this->doctrine->getManager();
+            $vote = $em->getRepository('AciliaRatingBundle:RatingVote')->findOneBy([
+                'voter' => $voter->getId(),
+                'resource' => $resource,
+            ]);
 
-			if ($vote instanceOf RatingVote) {
-				$alreadyVoted = true;
-			}
+            if ($vote instanceof RatingVote) {
+                $alreadyVoted = true;
+            }
 
-			$this->memcache->set($key, $alreadyVoted, 24);
-		}
+            $this->memcache->set($key, $alreadyVoted, 24);
+        }
 
-		return $alreadyVoted;
-	}
+        return $alreadyVoted;
+    }
 
-	public function vote(VotableInterface $votable, VoterInterface $voter, $voteValue)
-	{
-		$voteValue = $this->validateVoteValue($voteValue);
+    public function vote(VotableInterface $votable, VoterInterface $voter, $voteValue)
+    {
+        $voteValue = $this->validateVoteValue($voteValue);
 
         // Check if User has NOT voted already
-		if (!$this->checkIfVoterAlreadyVoted($votable, $voter)) {
-			$em = $this->doctrine->getManager();
+        if (!$this->checkIfVoterAlreadyVoted($votable, $voter)) {
+            $em = $this->doctrine->getManager();
 
-			// Get Result
-			$result = $this->getResult($votable);
+            // Get Result
+            $result = $this->getResult($votable);
 
-			// Calculate new Votes and Values
+            // Calculate new Votes and Values
             $this->getStrategy()->calculate($result, $voteValue, $result->getVotes() + 1);
             $this->getStrategy()->incVote($result);
 
-			// Create Vote
-			$vote = new RatingVote();
-			$vote->setDate(new DateTime())
+            // Create Vote
+            $vote = new RatingVote();
+            $vote->setDate(new DateTime())
                  ->setResult($result)
                  ->setResource($result->getResource())
                  ->setVoter($voter->getId())
                  ->setValue($voteValue);
             $em->persist($vote);
-			$em->flush();
+            $em->flush();
 
-			// Save user vote on Memcache
-			$key = 'Rating::' . $result->getResource() . '::' . $voter->getId();
-			$this->memcache->set($key, true, 24);
+            // Save user vote on Memcache
+            $key = 'Rating::' . $result->getResource() . '::' . $voter->getId();
+            $this->memcache->set($key, true, 24);
 
-			// Save user vote Value on Memcache
-			$key = 'RatingValue::' . $result->getResource() . '::' . $voter->getId();
-			$this->memcache->set($key, $voteValue, 1440);
+            // Save user vote Value on Memcache
+            $key = 'RatingValue::' . $result->getResource() . '::' . $voter->getId();
+            $this->memcache->set($key, $voteValue, 1440);
 
-			// Save vote result on Memcache
-			$key = 'Rating::' . $result->getResource();
-			$this->memcache->set($key, $result->getValue(), 24);
+            // Save vote result on Memcache
+            $key = 'Rating::' . $result->getResource();
+            $this->memcache->set($key, $result->getValue(), 24);
 
-			$ratingValue = $result->getValue();
+            $ratingValue = $result->getValue();
 
-			// Dispatch Event
-			$event = new RatedEvent($voter, $votable, $voteValue, $ratingValue, RatedEvent::TYPE_VOTE);
-			$this->eventDispatcher->dispatch(self::EVENT_RATED, $event);
+            // Dispatch Event
+            $event = new RatedEvent($voter, $votable, $voteValue, $ratingValue, RatedEvent::TYPE_VOTE);
+            $this->eventDispatcher->dispatch(self::EVENT_RATED, $event);
 
-			return $ratingValue;
-		}
+            return $ratingValue;
+        }
 
-		throw new AlreadyVotedException();
-	}
+        throw new AlreadyVotedException();
+    }
 
-	public function updateVote(VotableInterface $votable, VoterInterface $voter, $voteValue)
-	{
-		$voteValue = $this->validateVoteValue($voteValue);
+    public function updateVote(VotableInterface $votable, VoterInterface $voter, $voteValue)
+    {
+        $voteValue = $this->validateVoteValue($voteValue);
 
-		// Check if User HAS voted already
-		if ($this->checkIfVoterAlreadyVoted($votable, $voter)) {
-			$em = $this->doctrine->getManager();
+        // Check if User HAS voted already
+        if ($this->checkIfVoterAlreadyVoted($votable, $voter)) {
+            $em = $this->doctrine->getManager();
 
-			// Get Result and Vote
-			$result = $this->getResult($votable);
-			$vote = $this->getVote($votable, $voter);
+            // Get Result and Vote
+            $result = $this->getResult($votable);
+            $vote = $this->getVote($votable, $voter);
 
-			if ($vote instanceOf RatingVote) {
+            if ($vote instanceof RatingVote) {
 
                 // Calculate updated Values
                 $updatedValue = $voteValue - $vote->getValue();
                 $this->getStrategy()->calculate($result, $updatedValue, $result->getVotes());
 
-				// Set updated Values
-				$vote->setValue($voteValue);
-				$em->flush();
+                // Set updated Values
+                $vote->setValue($voteValue);
+                $em->flush();
 
-				// Save user vote Value on Memcache
-				$key = 'RatingValue::' . $result->getResource() . '::' . $voter->getId();
-				$this->memcache->set($key, $voteValue, 1440);
+                // Save user vote Value on Memcache
+                $key = 'RatingValue::' . $result->getResource() . '::' . $voter->getId();
+                $this->memcache->set($key, $voteValue, 1440);
 
-				// Save vote result on Memcache
-				$key = 'Rating::' . $result->getResource();
-				$this->memcache->set($key, $result->getValue(), 24);
+                // Save vote result on Memcache
+                $key = 'Rating::' . $result->getResource();
+                $this->memcache->set($key, $result->getValue(), 24);
 
-				$ratingValue = $result->getValue();
+                $ratingValue = $result->getValue();
 
-				// Dispatch Event
-				$event = new RatedEvent($voter, $votable, $voteValue, $ratingValue, RatedEvent::TYPE_UPDATE);
-				$this->eventDispatcher->dispatch(self::EVENT_RATED, $event);
+                // Dispatch Event
+                $event = new RatedEvent($voter, $votable, $voteValue, $ratingValue, RatedEvent::TYPE_UPDATE);
+                $this->eventDispatcher->dispatch(self::EVENT_RATED, $event);
 
-				return $ratingValue;
+                return $ratingValue;
+            } else {
+                throw new NotVotedException();
+            }
+        }
 
-			} else {
-				throw new NotVotedException();
-			}
-		}
+        throw new NotVotedException();
+    }
 
-		throw new NotVotedException();
-	}
+    public function removeVote(VotableInterface $votable, VoterInterface $voter)
+    {
+        // Check if User HAS voted already
+        if ($this->checkIfVoterAlreadyVoted($votable, $voter)) {
+            $em = $this->doctrine->getManager();
 
-	public function removeVote(VotableInterface $votable, VoterInterface $voter)
-	{
-		// Check if User HAS voted already
-		if ($this->checkIfVoterAlreadyVoted($votable, $voter)) {
-			$em = $this->doctrine->getManager();
+            // Get Result and Vote
+            $result = $this->getResult($votable);
+            $vote = $this->getVote($votable, $voter);
 
-			// Get Result and Vote
-			$result = $this->getResult($votable);
-			$vote = $this->getVote($votable, $voter);
-
-			if ($vote instanceOf RatingVote) {
-				// Calculate updated Values
+            if ($vote instanceof RatingVote) {
+                // Calculate updated Values
                 $this->getStrategy()->calculate($result, -$vote->getValue(), $result->getVotes() - 1);
                 $this->getStrategy()->decVote($result);
 
-				// Update user vote on Memcache
-				$key = 'Rating::' . $result->getResource() . '::' . $voter->getId();
-				$this->memcache->set($key, false, 24);
+                // Update user vote on Memcache
+                $key = 'Rating::' . $result->getResource() . '::' . $voter->getId();
+                $this->memcache->set($key, false, 24);
 
-				// Save user vote Value on Memcache
-				$key = 'RatingValue::' . $result->getResource() . '::' . $voter->getId();
-				$this->memcache->delete($key);
+                // Save user vote Value on Memcache
+                $key = 'RatingValue::' . $result->getResource() . '::' . $voter->getId();
+                $this->memcache->delete($key);
 
-				// Set updated Values
-				$em->remove($vote);
-				$em->flush();
+                // Set updated Values
+                $em->remove($vote);
+                $em->flush();
 
-				// Save vote result on Memcache
-				$key = 'Rating::' . $result->getResource();
-				$this->memcache->set($key, $result->getValue(), 24);
+                // Save vote result on Memcache
+                $key = 'Rating::' . $result->getResource();
+                $this->memcache->set($key, $result->getValue(), 24);
 
-				$ratingValue = $result->getValue();
+                $ratingValue = $result->getValue();
 
-				// Dispatch Event
-				$event = new RatedEvent($voter, $votable, null, $ratingValue, RatedEvent::TYPE_REMOVE);
-				$this->eventDispatcher->dispatch(self::EVENT_RATED, $event);
+                // Dispatch Event
+                $event = new RatedEvent($voter, $votable, null, $ratingValue, RatedEvent::TYPE_REMOVE);
+                $this->eventDispatcher->dispatch(self::EVENT_RATED, $event);
 
-				return $ratingValue;
+                return $ratingValue;
+            } else {
+                throw new NotVotedException();
+            }
+        }
 
-			} else {
-				throw new NotVotedException();
-			}
-		}
+        throw new NotVotedException();
+    }
 
-		throw new NotVotedException();
-	}
+    public function getVoteResult(VotableInterface $votable)
+    {
+        $resource = RatingResult::calculateResource($votable);
+        $key = 'Rating::' . $resource;
 
-	public function getVoteResult(VotableInterface $votable)
-	{
-		$resource = RatingResult::calculateResource($votable);
-		$key = 'Rating::' . $resource;
+        $value = $this->memcache->get($key);
+        if ($this->memcache->notFound()) {
+            // Get Result
+            $result = $this->getResult($votable, false);
 
-		$value = $this->memcache->get($key);
-	    if ($this->memcache->notFound()) {
-	    	// Get Result
-	    	$result = $this->getResult($votable, false);
+            if ($result) {
+                $value =  $result->getValue();
+            } else {
+                $value = 0;
+            }
 
-	    	if ($result) {
-	    		$value =  $result->getValue();
+            // Save result on Memcache
+            $this->memcache->set($key, $value, 24);
+        }
 
-	    	} else {
-	    		$value = 0;
-	    	}
+        return $value;
+    }
 
-	    	// Save result on Memcache
-	    	$this->memcache->set($key, $value, 24);
-	    }
+    public function getVoterVoteResult(VoterInterface $voter, VotableInterface $votable)
+    {
+        $value = false;
+        $resource = RatingResult::calculateResource($votable);
 
-	    return $value;
-	}
+        // Check if User HAS voted
+        if ($this->checkIfVoterAlreadyVoted($votable, $voter)) {
+            $key = 'RatingValue::' . $resource . '::' . $voter->getId();
+            $value = $this->memcache->get($key);
 
-	public function getVoterVoteResult(VoterInterface $voter, VotableInterface $votable)
-	{
-		$value = false;
-		$resource = RatingResult::calculateResource($votable);
+            if ($this->memcache->notFound()) {
+                $vote = $this->getVote($votable, $voter);
+                if ($vote instanceof RatingVote) {
+                    $value = $vote->getValue();
+                    $this->memcache->set($key, $value, 1440);
+                }
+            }
+        } else {
+            throw new NotVotedException();
+        }
 
-		// Check if User HAS voted
-		if ($this->checkIfVoterAlreadyVoted($votable, $voter)) {
-			$key = 'RatingValue::' . $resource . '::' . $voter->getId();
-		    $value = $this->memcache->get($key);
-
-		    if ($this->memcache->notFound()) {
-		    	$vote = $this->getVote($votable, $voter);
-		    	if ($vote instanceOf RatingVote) {
-		    		$value = $vote->getValue();
-		    		$this->memcache->set($key, $value, 1440);
-		    	}
-		    }
-
-		} else {
-			throw new NotVotedException();
-		}
-
-		return $value;
-	}
+        return $value;
+    }
 
     protected function getStrategy()
     {

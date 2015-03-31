@@ -3,7 +3,6 @@ namespace Acilia\Bundle\RatingBundle\Library\Rating\Strategy;
 
 use Acilia\Bundle\RatingBundle\Entity\RatingResult;
 
-
 interface StrategyInterface
 {
     /**
@@ -35,5 +34,4 @@ interface StrategyInterface
      * @param int $voteAmount
      */
     public function calculate(RatingResult $result, $voteValue, $voteAmount);
-
 }

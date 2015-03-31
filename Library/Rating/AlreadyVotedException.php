@@ -5,5 +5,4 @@ use Exception;
 
 class AlreadyVotedException extends Exception
 {
-
 }

@@ -3,11 +3,11 @@ namespace Acilia\Bundle\RatingBundle\Library\Rating;
 
 interface VotableInterface
 {
-	public function getResourceType();
+    public function getResourceType();
 
-	public function getResourceId();
+    public function getResourceId();
 
-	public function setRating($rating);
+    public function setRating($rating);
 
-	public function getRating();
+    public function getRating();
 }
