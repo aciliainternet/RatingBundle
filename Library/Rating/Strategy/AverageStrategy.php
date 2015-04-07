@@ -2,6 +2,8 @@
 namespace Acilia\Bundle\RatingBundle\Library\Rating\Strategy;
 
 use Acilia\Bundle\RatingBundle\Entity\RatingResult;
+use Acilia\Bundle\RatingBundle\Entity\RatingVote;
+use Acilia\Bundle\RatingBundle\Library\Rating\VoterInterface;
 
 class AverageStrategy implements StrategyInterface
 {
@@ -14,25 +16,30 @@ class AverageStrategy implements StrategyInterface
         return 'average';
     }
 
-    public function incVote(RatingResult $result)
+    public function addVote(RatingResult $result, RatingVote $vote)
     {
-        $newVotes = $result->getVotes() + 1;
+        $newValue = (($result->getValue() * $result->getVotes()) + $vote->getValue()) / ($result->getVotes() + 1);
+        $newValue = round($newValue, 2, PHP_ROUND_HALF_UP);
 
-        // Set new Votes
-        $result->setVotes($newVotes);
+        // Set new Values
+        $result->setValue($newValue);
+        $result->setVotes($result->getVotes() + 1);
+
     }
 
-    public function decVote(RatingResult $result)
+    public function updateVote(RatingResult $result, RatingVote $vote, $voteValue)
     {
-        $newVotes = $result->getVotes() - 1;
+        $newValue = (($result->getValue() * $result->getVotes()) - $vote->getValue() + $voteValue) / $result->getVotes();
+        $newValue = round($newValue, 2, PHP_ROUND_HALF_UP);
 
-        // Set new Votes
-        $result->setVotes($newVotes);
+        // Set new Values
+        $vote->setValue($voteValue);
+        $result->setValue($newValue);
     }
 
-    public function calculate(RatingResult $result, $voteValue, $voteNumber)
+    public function removeVote(RatingResult $result, RatingVote $vote)
     {
-        $newValue = (($result->getValue() * $result->getVotes()) + $voteValue) / $voteNumber;
+        $newValue = ($result->getVotes() > 1 ) ? (($result->getValue() * $result->getVotes()) - $vote->getValue()) / $result->getVotes() - 1 : 0;
         $newValue = round($newValue, 2, PHP_ROUND_HALF_UP);
 
         // Set new Values

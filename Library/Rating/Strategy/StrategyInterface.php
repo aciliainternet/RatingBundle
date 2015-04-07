@@ -2,6 +2,9 @@
 namespace Acilia\Bundle\RatingBundle\Library\Rating\Strategy;
 
 use Acilia\Bundle\RatingBundle\Entity\RatingResult;
+use Acilia\Bundle\RatingBundle\Entity\RatingVote;
+use Acilia\Bundle\RatingBundle\Library\Rating\VoterInterface;
+
 
 interface StrategyInterface
 {
@@ -13,25 +16,26 @@ interface StrategyInterface
     public function getName();
 
     /**
-     * Increases the amount of votes of the RatingResult entity.
-     *
-     * @param RatingResult $result
-     */
-    public function incVote(RatingResult $result);
-
-    /**
-     * Decreases the amount of votes of the RatingResult entity.
-     *
-     * @param RatingResult $result
-     */
-    public function decVote(RatingResult $result);
-
-    /**
      * Calculates the new value of the RatingResult entity.
      *
      * @param RatingResult $result
-     * @param int $voteValue
-     * @param int $voteAmount
+     * @param RatingVote $vote
      */
-    public function calculate(RatingResult $result, $voteValue, $voteAmount);
+    public function addVote(RatingResult $result, RatingVote $vote);
+
+    /**
+     * Calculates the new value of the RatingResult entity on update a vote.
+     *
+     * @param RatingResult $result
+     * @param RatingVote $vote
+     * @param int $voteValue
+     */
+    public function updateVote(RatingResult $result, RatingVote $vote, $voteValue);
+    /**
+     * Calculates the new value of the RatingResult entity on deletes a vote.
+     *
+     * @param RatingResult $result
+     * @param RatingVote $vote
+     */
+    public function removeVote(RatingResult $result, RatingVote $vote);
 }

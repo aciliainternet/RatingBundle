@@ -5,4 +5,5 @@ use Exception;
 
 class NotVotedException extends Exception
 {
+
 }

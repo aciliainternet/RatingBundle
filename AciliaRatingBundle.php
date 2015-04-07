@@ -14,4 +14,5 @@ class AciliaRatingBundle extends Bundle
 
         $container->addCompilerPass(new RatingCompilerPass());
     }
+
 }
