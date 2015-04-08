@@ -39,10 +39,14 @@ class AverageStrategy implements StrategyInterface
 
     public function removeVote(RatingResult $result, RatingVote $vote)
     {
-        $newValue = ($result->getVotes() > 1 ) ? (($result->getValue() * $result->getVotes()) - $vote->getValue()) / $result->getVotes() - 1 : 0;
+        $newValue = 0;
+        if ($result->getVotes() > 1) {
+            $newValue = (($result->getValue() * $result->getVotes()) - $vote->getValue()) / ($result->getVotes() - 1);
+        }
         $newValue = round($newValue, 2, PHP_ROUND_HALF_UP);
 
         // Set new Values
         $result->setValue($newValue);
+        $result->setVotes($result->getVotes() - 1);
     }
 }

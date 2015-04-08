@@ -137,9 +137,11 @@ class RatingService
                 ->setResource($result->getResource())
                 ->setVoter($voter->getId())
                 ->setValue($voteValue);
+
 			// Calculate new Votes and Values
             $this->getStrategy()->addVote($result, $vote);
 
+            // Set new Values
             $em->persist($result);
             $em->persist($vote);
             $em->flush();
@@ -181,7 +183,6 @@ class RatingService
 			$vote = $this->getVote($votable, $voter);
 
 			if ($vote instanceOf RatingVote) {
-
                 // Calculate updated Values
                 $this->getStrategy()->updateVote($result, $vote, $voteValue);
 
