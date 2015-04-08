@@ -5,16 +5,16 @@ use Acilia\Bundle\RatingBundle\Library\Rating\VotableInterface;
 
 class VotableExample implements VotableInterface
 {
-    public $id;
-    public $name;
+	public $id;
+	public $name;
 
     public function getResourceType()
     {
-        return 'mockup';
+    	return 'mockup';
     }
 
     public function getResourceId()
     {
-        return $this->id;
+    	return $this->id;
     }
 }
