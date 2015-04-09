@@ -48,6 +48,12 @@ class RatingResult
      */
     private $value;
 
+    /**
+     * @ORM\Column(name="result_extra", type="string", length=32)
+     */
+    private $extra;
+
+
     public static function calculateResource(VotableInterface $votable)
     {
     	$resource = sha1($votable->getResourceType())
@@ -181,5 +187,28 @@ class RatingResult
     public function getValue()
     {
         return $this->value;
+    }
+
+    /**
+     * Set extra
+     *
+     * @param string $extra
+     * @return RatingResult
+     */
+    public function setExtra($value)
+    {
+        $this->extra = $value;
+
+        return $this;
+    }
+
+    /**
+     * Get extra
+     *
+     * @return string
+     */
+    public function getExtra()
+    {
+        return $this->extra;
     }
 }
