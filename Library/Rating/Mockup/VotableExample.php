@@ -7,6 +7,7 @@ class VotableExample implements VotableInterface
 {
 	public $id;
 	public $name;
+    protected $rating;
 
     public function getResourceType()
     {
@@ -16,5 +17,16 @@ class VotableExample implements VotableInterface
     public function getResourceId()
     {
     	return $this->id;
+    }
+
+    public function setRating($rating)
+    {
+        $this->rating = $rating;
+        return $this;
+    }
+
+    public function getRating()
+    {
+        return $this->rating;
     }
 }

@@ -28,7 +28,7 @@ interface StrategyInterface
      *
      * @param RatingResult $result
      * @param RatingVote $vote
-     * @param int $voteValue
+     * @param float $voteValue
      */
     public function updateVote(RatingResult $result, RatingVote $vote, $voteValue);
     /**

@@ -51,7 +51,10 @@ class RatingService
 
 	protected function validateVoteValue($value)
 	{
-		$value = (integer) $value;
+        // Ensure value is a 2 digit number, don't round it, just trim extra digits.
+        $value = (float) $value * 100;
+        $value = (integer) $value;
+        $value = $value / 100;
 
 		if ($value < $this->options['min']) {
 			$value = $this->options['min'];

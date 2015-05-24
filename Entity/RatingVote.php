@@ -44,7 +44,7 @@ class RatingVote
     private $resource;
 
     /**
-     * @ORM\Column(name="vote_value", type="integer")
+     * @ORM\Column(name="vote_value", type="decimal", precision=5, scale=2)
      */
     private $value;
 
@@ -130,7 +130,7 @@ class RatingVote
     /**
      * Set value
      *
-     * @param integer $value
+     * @param string $value
      * @return RatingVote
      */
     public function setValue($value)
@@ -143,7 +143,7 @@ class RatingVote
     /**
      * Get value
      *
-     * @return integer
+     * @return string
      */
     public function getValue()
     {
