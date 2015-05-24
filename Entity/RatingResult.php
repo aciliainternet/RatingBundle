@@ -56,12 +56,12 @@ class RatingResult
 
     public static function calculateResource(VotableInterface $votable)
     {
-    	$resource = sha1($votable->getResourceType())
-    	          . '#'
-    	          . sha1($votable->getResourceId());
-    	$resource = sha1($resource);
+        $resource = sha1($votable->getResourceType())
+                  . '#'
+                  . sha1($votable->getResourceId());
+        $resource = sha1($resource);
 
-    	return $resource;
+        return $resource;
     }
 
     /**

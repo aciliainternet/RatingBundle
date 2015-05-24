@@ -5,7 +5,6 @@ use Acilia\Bundle\RatingBundle\Entity\RatingResult;
 use Acilia\Bundle\RatingBundle\Entity\RatingVote;
 use Acilia\Bundle\RatingBundle\Library\Rating\VoterInterface;
 
-
 interface StrategyInterface
 {
     /**

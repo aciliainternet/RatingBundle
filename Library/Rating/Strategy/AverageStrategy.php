@@ -24,7 +24,6 @@ class AverageStrategy implements StrategyInterface
         // Set new Values
         $result->setValue($newValue);
         $result->setVotes($result->getVotes() + 1);
-
     }
 
     public function updateVote(RatingResult $result, RatingVote $vote, $voteValue)
