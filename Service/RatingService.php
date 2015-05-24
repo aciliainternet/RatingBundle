@@ -285,7 +285,6 @@ class RatingService
 
     public function getVoterVoteResult(VoterInterface $voter, VotableInterface $votable)
     {
-        $value = false;
         $resource = RatingResult::calculateResource($votable);
 
         // Check if User HAS voted
