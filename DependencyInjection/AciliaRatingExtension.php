@@ -1,5 +1,14 @@
 <?php
 
+/*
+ * This file is part of the Acilia Component / Rating Bundle.
+ *
+ * (c) Acilia Internet S.L. <info@acilia.es>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 namespace Acilia\Bundle\RatingBundle\DependencyInjection;
 
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -8,9 +17,12 @@ use Symfony\Component\HttpKernel\DependencyInjection\Extension;
 use Symfony\Component\DependencyInjection\Loader;
 
 /**
- * This is the class that loads and manages your bundle configuration
+ * Bundle Extension.
  *
- * To learn more see {@link http://symfony.com/doc/current/cookbook/bundles/extension.html}
+ * Load services and configure parameters.
+ *
+ * @author Andrés Montañez <andres@acilia.es>
+ * @author Alejandro Glejberman <alejandro@acilia.es>
  */
 class AciliaRatingExtension extends Extension
 {

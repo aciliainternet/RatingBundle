@@ -1,10 +1,29 @@
 <?php
+
+/*
+ * This file is part of the Acilia Component / Rating Bundle.
+ *
+ * (c) Acilia Internet S.L. <info@acilia.es>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 namespace Acilia\Bundle\RatingBundle\Library\Rating\Strategy;
 
 use Acilia\Bundle\RatingBundle\Entity\RatingResult;
 use Acilia\Bundle\RatingBundle\Entity\RatingVote;
 use Acilia\Bundle\RatingBundle\Library\Rating\VoterInterface;
 
+/**
+ * Strategy Interface
+ *
+ * All Rating Strategies must implement this Interface.
+ *
+ * @author Andrés Montañez <andres@acilia.es>
+ * @author Rodrigo Mendez <rodrigo@acilia.es>
+ * @author Alejandro Glejberman <alejandro@acilia.es>
+ */
 interface StrategyInterface
 {
     /**

@@ -1,14 +1,25 @@
 <?php
 
+/*
+ * This file is part of the Acilia Component / Rating Bundle.
+ *
+ * (c) Acilia Internet S.L. <info@acilia.es>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 namespace Acilia\Bundle\RatingBundle\DependencyInjection;
 
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Config\Definition\ConfigurationInterface;
 
 /**
- * This is the class that validates and merges configuration from your app/config files
+ * Configuration
  *
- * To learn more see {@link http://symfony.com/doc/current/cookbook/bundles/extension.html#cookbook-bundles-extension-config-class}
+ * Optional configuration bundle constraints.
+ *
+ * @author Andrés Montañez <andres@acilia.es>
  */
 class Configuration implements ConfigurationInterface
 {
@@ -19,10 +30,6 @@ class Configuration implements ConfigurationInterface
     {
         $treeBuilder = new TreeBuilder();
         $rootNode = $treeBuilder->root('acilia_rating');
-
-        // Here you should define the parameters that are allowed to
-        // configure your bundle. See the documentation linked above for
-        // more information on that topic.
 
         return $treeBuilder;
     }

@@ -1,4 +1,14 @@
 <?php
+
+/*
+ * This file is part of the Acilia Component / Rating Bundle.
+ *
+ * (c) Acilia Internet S.L. <info@acilia.es>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 namespace Acilia\Bundle\RatingBundle\Service;
 
 use Acilia\Bundle\RatingBundle\Event\RatedEvent;
@@ -13,6 +23,15 @@ use Acilia\Bundle\RatingBundle\Service\RatingStrategyService;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use DateTime;
 
+/**
+ * Rating Service
+ *
+ * Service for handling the Votes
+ *
+ * @author Andrés Montañez <andres@acilia.es>
+ * @author Alejandro Glejberman <alejandro@acilia.es>
+ * @author Rodrigo Mendez <rodrigo@acilia.es>
+ */
 class RatingService
 {
     /**

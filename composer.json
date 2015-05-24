@@ -2,7 +2,8 @@
     "name": "aciliainternet/rating-bundle",
     "type": "bundle",
     "description": "Acilia Rating Bundle",
-    "keywords": ["bundle"],
+    "license": "MIT",
+    "keywords": ["bundle", "rating"],
     "homepage": "https://github.com/aciliainternet/RatingBundle",
     "authors": [
         {
