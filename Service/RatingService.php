@@ -66,6 +66,10 @@ class RatingService
         if (!isset($this->options['max']) || !is_numeric($this->options['max'])) {
             $this->options['max'] = 5;
         }
+
+        if (!isset($this->options['strategy'])) {
+            $this->options['strategy'] = 'average';
+        }
     }
 
     protected function validateVoteValue($value)
